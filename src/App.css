@@ -1,5 +1,11 @@
 .App {
   text-align: center;
+  background-image: url("https://www.imgbase.info/images/safe-wallpapers/miscellaneous/8_bit/6973_8_bit_8-bit.jpg");
+  background-position: right;
+  margin-top: auto;
+  height: 50em;
+  margin-bottom: auto;
+  background-repeat: no-repeat;
 }
 
 .App-logo {
@@ -8,19 +14,23 @@
 }
 
 .App-header {
-  background-color: #222;
   height: 150px;
   padding: 20px;
-  color: white;
+  color: #222;
 }
 
 .App-title {
   font-size: 1.5em;
 }
 
+.App-body {
+  margin-left: auto;
+  margin-right: auto;
+  display: inline-block;
+}
+
 .App-intro {
   font-size: large;
-  text-align: center;
 }
 
 .row {

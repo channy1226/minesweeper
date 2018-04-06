@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 class App extends Component {
@@ -7,9 +6,15 @@ class App extends Component {
     super();
     this.state = {
       gridSize: 6,
-      bombAmount: 5
+      bombAmount: 5,
+      gameOver: false,
+      gameWon: false,
+      timer: null,
+      timerOn: false,
+      counter: 0,
     };
     this.state.board = this.generate(this.state.gridSize, this.state.bombAmount);
+    this.tick = this.tick.bind(this);
   }
 
   generate(gridSize, bombAmount) {
@@ -29,7 +34,7 @@ class App extends Component {
     for (let i = 0; i < bombAmount; i++) {
       let x = Math.floor(Math.random() * gridSize);
       let y = Math.floor(Math.random() * gridSize);
-      if (board[x][y].view != '*') {
+      if (board[x][y].view !== '*') {
         board[x][y].view = '*';
       } else {
         i--;
@@ -42,9 +47,9 @@ class App extends Component {
 
         for (let xd = -1; xd <= 1; xd++) {
           for (let yd = -1; yd <= 1; yd++) {
-            if (xd == 0 && yd == 0) continue;
+            if (xd === 0 && yd === 0) continue;
             if (x + xd < 0 || y + yd < 0 || x + xd >= gridSize || y + yd >= gridSize) continue;
-            if (board[x + xd][y + yd].view == '*') board[x][y].view++;
+            if (board[x + xd][y + yd].view === '*') board[x][y].view++;
           }
         }
       }
@@ -53,13 +58,28 @@ class App extends Component {
     return board;
   }
 
+  tick() {
+    if (this.state.gameOver || this.state.gameWon) return;
+    this.setState({
+      counter: this.state.counter + 1
+    });
+  }
+
   handleClick(x, y, e) {
+    if (this.state.gameOver || this.state.gameWon) return;
+    let timer = setInterval(this.tick, 1000);
+    this.setState({
+      timerOn: true,
+      timer
+    })
+    clearInterval(this.state.timer);
+
     if (e.type === 'contextmenu') { // right click
       e.preventDefault();
       if (this.state.board[x][y].revealed) return;
       this.state.board[x][y].flagged = !this.state.board[x][y].flagged;
       this.setState({
-        board:this.state.board
+        board:this.state.board,
       });
 
       return;
@@ -72,10 +92,9 @@ class App extends Component {
     this.state.board[x][y].revealed = true;
     if (this.state.board[x][y].view === '*') {
     this.setState({
-      board:this.state.board
+      board:this.state.board,
+      gameOver: true,
     })
-      alert("u dead");
-
       return;
     }
 
@@ -87,7 +106,7 @@ class App extends Component {
 
           for (let xd = -1; xd <= 1; xd++) {
             for (let yd = -1; yd <= 1; yd++) {
-              if (xd == 0 && yd == 0) continue;
+              if (xd === 0 && yd === 0) continue;
               if (x + xd < 0 || y + yd < 0 || x + xd >= gridSize || y + yd >= gridSize) continue;
               if (board[x + xd][y + yd].view === 0) {
                 board[x + xd][y + yd].revealed = true;
@@ -103,7 +122,7 @@ class App extends Component {
 
           for (let xd = -1; xd <= 1; xd++) {
             for (let yd = -1; yd <= 1; yd++) {
-              if (xd == 0 && yd == 0) continue;
+              if (xd === 0 && yd === 0) continue;
               if (x + xd < 0 || y + yd < 0 || x + xd >= gridSize || y + yd >= gridSize) continue;
               if (board[x + xd][y + yd].view === 0) {
                 board[x][y].revealed = true;
@@ -126,7 +145,9 @@ class App extends Component {
     }
 
     if (correctFlagged === this.state.bombAmount || correctRevealed === nonBomb) {
-      alert("u win");
+      this.setState({
+        gameWon: true
+      })
     }
 
     this.setState({
@@ -149,10 +170,29 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
+          <h1 className="App-title">Minesweeper! Right-click to flag a bomb. Good luck!</h1>
+          <p>{this.state.timerOn?
+            <div>Timer: {this.state.counter}</div> :
+            <div> The timer will start when you make your first move </div>}</p>
+          <p> Enter grid size (max 20):
+          <input
+            type="number"
+            value={this.state.gridSize}
+            onChange={this.handleGridChange.bind(this)}
+          />
+          </p>
+          <p> Enter bomb amount:
+          <input
+            type="number"
+            value={this.state.bombAmount}
+            onChange={this.handleBombChange.bind(this)}
+          />
+          </p>
         </header>
-        <p className="App-intro">
+        <div className="App-body">
+        <p>
+          {this.state.gameOver ? <h1>Game Over!</h1> : null}
+          {this.state.gameWon ? <h1>You Won</h1> : null}
           {this.state.board.map((row, x) =>
             <div className="row">
                 {row.map((item, y) => (
@@ -160,26 +200,15 @@ class App extends Component {
                   onContextMenu={this.handleClick.bind(this, x, y)}
                   onClick={this.handleClick.bind(this, x, y)}
                   className = "item" >
-                    {item.flagged ? '?' : item.revealed ? item.view : ''}
+                    {item.flagged ? '?' :
+                    item.revealed ? item.view : ''
+                  }
                 </span>)
               )}
             </div>
           )}
         </p>
-        <p> Enter grid size (max 20)
-        <input
-          type="number"
-          value={this.state.gridSize}
-          onChange={this.handleGridChange.bind(this)}
-        />
-        </p>
-        <p> Enter bomb amount
-        <input
-          type="number"
-          value={this.state.bombAmount}
-          onChange={this.handleBombChange.bind(this)}
-        />
-        </p>
+        </div>
       </div>
     );
   }
