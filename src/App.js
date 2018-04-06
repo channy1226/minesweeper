@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-
 class App extends Component {
   constructor() {
     super();
@@ -18,7 +17,7 @@ class App extends Component {
     for (let x = 0; x < gridSize; x++) {
       board.push([]);
       for (let y = 0; y < gridSize; y++) {
-        board[x][y] = '+';
+        board[x][y] = {view: '+', revealed: false};
       }
     }
 
@@ -30,14 +29,21 @@ class App extends Component {
     for (let i = 0; i < bombAmount; i++) {
       let x = Math.floor(Math.random() * gridSize);
       let y = Math.floor(Math.random() * gridSize);
-      if (board[x][y] != '*') {
-        board[x][y] = '*';
+      if (board[x][y].view != '*') {
+        board[x][y].view = '*';
       } else {
         i--;
       }
     }
 
     return board;
+  }
+
+  handleClick(x, y) {
+    this.state.board[x][y].revealed = true;
+    this.setState({
+      board:this.state.board
+    })
   }
 
   handleGridChange(grid) {
@@ -59,9 +65,9 @@ class App extends Component {
           <h1 className="App-title">Welcome to React</h1>
         </header>
         <p className="App-intro">
-          {this.state.board.map((row) =>
+          {this.state.board.map((row, x) =>
             <div className="row">
-                {row.map(item => (<span className = "item" >{item}</span>))}
+                {row.map((item, y) => (<span onClick={this.handleClick.bind(this, x, y)} className = "item" >{item.revealed ? item.view : ''}</span>))}
             </div>)
           }
         </p>
