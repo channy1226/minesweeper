@@ -17,7 +17,7 @@ class App extends Component {
     for (let x = 0; x < gridSize; x++) {
       board.push([]);
       for (let y = 0; y < gridSize; y++) {
-        board[x][y] = {view: '+', revealed: false};
+        board[x][y] = {view: 0, revealed: false, flagged: false};
       }
     }
 
@@ -36,11 +36,99 @@ class App extends Component {
       }
     }
 
+    for (let x = 0; x < gridSize; x++) {
+      for (let y = 0; y < gridSize; y++) {
+        if (board[x][y].view === '*') continue;
+
+        for (let xd = -1; xd <= 1; xd++) {
+          for (let yd = -1; yd <= 1; yd++) {
+            if (xd == 0 && yd == 0) continue;
+            if (x + xd < 0 || y + yd < 0 || x + xd >= gridSize || y + yd >= gridSize) continue;
+            if (board[x + xd][y + yd].view == '*') board[x][y].view++;
+          }
+        }
+      }
+    }
+
     return board;
   }
 
-  handleClick(x, y) {
+  handleClick(x, y, e) {
+    if (e.type === 'contextmenu') { // right click
+      e.preventDefault();
+      if (this.state.board[x][y].revealed) return;
+      this.state.board[x][y].flagged = !this.state.board[x][y].flagged;
+      this.setState({
+        board:this.state.board
+      });
+
+      return;
+    }
+
+    let board = this.state.board;
+    let gridSize = this.state.gridSize;
+
+    this.state.board[x][y].flagged = false;
     this.state.board[x][y].revealed = true;
+    if (this.state.board[x][y].view === '*') {
+    this.setState({
+      board:this.state.board
+    })
+      alert("u dead");
+
+      return;
+    }
+
+
+    if (board[x][y].view === 0) {
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          if (board[x][y].view === '*') continue;
+
+          for (let xd = -1; xd <= 1; xd++) {
+            for (let yd = -1; yd <= 1; yd++) {
+              if (xd == 0 && yd == 0) continue;
+              if (x + xd < 0 || y + yd < 0 || x + xd >= gridSize || y + yd >= gridSize) continue;
+              if (board[x + xd][y + yd].view === 0) {
+                board[x + xd][y + yd].revealed = true;
+              }
+            }
+          }
+        }
+      }
+
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          if (board[x][y].view === '*') continue;
+
+          for (let xd = -1; xd <= 1; xd++) {
+            for (let yd = -1; yd <= 1; yd++) {
+              if (xd == 0 && yd == 0) continue;
+              if (x + xd < 0 || y + yd < 0 || x + xd >= gridSize || y + yd >= gridSize) continue;
+              if (board[x + xd][y + yd].view === 0) {
+                board[x][y].revealed = true;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    let correctFlagged = 0;
+    let correctRevealed = 0;
+    let nonBomb = gridSize * gridSize - this.state.bombAmount;
+    for (let x = 0; x < gridSize; x++) {
+      for (let y = 0; y < gridSize; y++) {
+        if (this.state.board[x][y].view === '*' && this.state.board[x][y].flagged) correctFlagged++;
+        if (this.state.board[x][y].view !== '*' && this.state.board[x][y].flagged) correctFlagged--;
+        if (this.state.board[x][y].view !== '*' && this.state.board[x][y].revealed) correctRevealed++;
+      }
+    }
+
+    if (correctFlagged === this.state.bombAmount || correctRevealed === nonBomb) {
+      alert("u win");
+    }
+
     this.setState({
       board:this.state.board
     })
@@ -67,9 +155,16 @@ class App extends Component {
         <p className="App-intro">
           {this.state.board.map((row, x) =>
             <div className="row">
-                {row.map((item, y) => (<span onClick={this.handleClick.bind(this, x, y)} className = "item" >{item.revealed ? item.view : ''}</span>))}
-            </div>)
-          }
+                {row.map((item, y) => (
+                  <span
+                  onContextMenu={this.handleClick.bind(this, x, y)}
+                  onClick={this.handleClick.bind(this, x, y)}
+                  className = "item" >
+                    {item.flagged ? '?' : item.revealed ? item.view : ''}
+                </span>)
+              )}
+            </div>
+          )}
         </p>
         <p> Enter grid size (max 20)
         <input
