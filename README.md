@@ -1,5 +1,8 @@
 <h1> Dynamic Minesweeper Game </h1>
 
+<h4> Demo: http://channyxchanny.com/minesweeper/ </h4>
+<img src="https://i.imgur.com/Y7Wd3cK.png"></img>
+
 At the start of the game, we ask the user for the amount of bomb and the grid size of the game (default being 5 bombs and a 6 x 6 grid)
 
 Thus, the initial state is: 
